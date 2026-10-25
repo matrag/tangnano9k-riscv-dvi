@@ -1,0 +1,8 @@
+# Store text files with LF line endings and check them out with LF on every
+# system: the tools (iverilog, yosys, $readmemh, make) are happy with LF on
+# Windows too, and the generated .hex files stay byte-identical everywhere.
+* text=auto eol=lf
+
+# Binary files (none yet - for pictures added later)
+*.png binary
+*.jpg binary

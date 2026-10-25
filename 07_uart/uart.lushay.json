@@ -1,0 +1,24 @@
+{
+    "name": "uart",
+    "includedFiles": [
+        "top.v",
+        "../lib/clocks.v",
+        "../lib/soc_text.v",
+        "../lib/soc.v",
+        "../lib/rv32i_core.v",
+        "../lib/soc_ram.v",
+        "../lib/uart_tx.v",
+        "../lib/uart_rx.v",
+        "../lib/fifo.v",
+        "../lib/video_timing.v",
+        "../lib/bram_sdp.v",
+        "../lib/text_mode.v",
+        "../lib/tmds_encoder.v",
+        "../lib/hdmi_out.v"
+    ],
+    "testBenches": ["uart_tb.v", "terminal_tb.v"],
+    "constraintsFile": "tangnano9k.cst",
+    "top": "top",
+    "board": "tangnano9k",
+    "baudRate": 115200
+}

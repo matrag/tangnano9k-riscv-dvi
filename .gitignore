@@ -1,0 +1,25 @@
+# ---- Your PC's tools and paths (framework_initialise.py) -------------------------
+toolchain/
+local_paths.mk
+
+# ---- Software build outputs (sw/Makefile) ----------------------------------------
+# The .hex files in the step folders ARE part of the repository, so the FPGA
+# designs can be built without a RISC-V compiler.
+sw/build/
+
+# ---- Lushay Code / yosys / nextpnr / gowin_pack outputs, in the step folders -----
+/[0-9][0-9]_*/*.json
+!/[0-9][0-9]_*/*.lushay.json
+/[0-9][0-9]_*/*.fs
+/[0-9][0-9]_*/___tempbuild*
+
+# ---- Simulation outputs (iverilog, testbenches) ----------------------------------
+*.vcd
+*.ppm
+*.o
+*.vvp
+
+# ---- Editors, Python -------------------------------------------------------------
+.vscode/
+__pycache__/
+*.pyc

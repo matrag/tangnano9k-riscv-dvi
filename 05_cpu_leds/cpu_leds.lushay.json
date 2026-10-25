@@ -1,0 +1,16 @@
+{
+    "name": "cpu_leds",
+    "includedFiles": [
+        "top.v",
+        "../lib/soc.v",
+        "../lib/rv32i_core.v",
+        "../lib/soc_ram.v",
+        "../lib/uart_tx.v",
+        "../lib/uart_rx.v",
+        "../lib/fifo.v"
+    ],
+    "testBenches": ["leds_tb.v"],
+    "constraintsFile": "tangnano9k.cst",
+    "top": "top",
+    "board": "tangnano9k"
+}

@@ -1,0 +1,7 @@
+{
+    "name": "blinky",
+    "includedFiles": ["top.v"],
+    "constraintsFile": "tangnano9k.cst",
+    "top": "top",
+    "board": "tangnano9k"
+}

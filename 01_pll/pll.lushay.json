@@ -1,0 +1,7 @@
+{
+    "name": "pll",
+    "includedFiles": ["top.v", "clocks.v"],
+    "constraintsFile": "tangnano9k.cst",
+    "top": "top",
+    "board": "tangnano9k"
+}

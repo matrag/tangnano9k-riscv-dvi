@@ -1,0 +1,14 @@
+{
+    "name": "hdmi",
+    "includedFiles": [
+        "top.v",
+        "../lib/clocks.v",
+        "../lib/video_timing.v",
+        "../lib/tmds_encoder.v",
+        "../lib/hdmi_out.v"
+    ],
+    "testBenches": ["tmds_encoder_tb.v"],
+    "constraintsFile": "tangnano9k.cst",
+    "top": "top",
+    "board": "tangnano9k"
+}

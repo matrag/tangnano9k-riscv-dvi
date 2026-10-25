@@ -1,0 +1,15 @@
+{
+    "name": "cpu_sim",
+    "includedFiles": [
+        "../lib/soc.v",
+        "../lib/rv32i_core.v",
+        "../lib/soc_ram.v",
+        "../lib/uart_tx.v",
+        "../lib/uart_rx.v",
+        "../lib/fifo.v"
+    ],
+    "testBenches": ["cpu_tests_tb.v", "hello_tb.v"],
+    "constraintsFile": "../03_text/tangnano9k.cst",
+    "top": "soc",
+    "board": "tangnano9k"
+}
