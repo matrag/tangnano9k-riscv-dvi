@@ -43,8 +43,3 @@ The calculation of the PLL settings is explained in the comments of
 | [`top.v`](../../01_pll/top.v) | the three blinkers, with the `blinker` module and its reset synchronizer |
 | [`clocks.v`](../../01_pll/clocks.v) | PLL + divider (the commented version lives in `lib/clocks.v`) |
 | [`tangnano9k.cst`](../../01_pll/tangnano9k.cst), [`pll.lushay.json`](../../01_pll/pll.lushay.json) | pins, project |
-
-## Problems we hit
-
-- Yosys error: `CLKDIV` has no parameter `GSREN` in this yosys version for
-  the GW1NR-9 (only `DIV_MODE`). Removed it.

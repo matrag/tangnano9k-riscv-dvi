@@ -168,17 +168,3 @@ text arrives at full line speed - pasted, not typed - the CPU falls behind,
 the 16-byte receive FIFO fills up and characters are lost. Typing by hand is
 far slower and never hits this. A fix would be a transmit FIFO plus a bigger
 receive FIFO, or (later) interrupts.
-
-## Problems we hit
-
-- The project files of steps 4, 5 and 6 weren't updated when `soc.v` started
-  using the UART modules, so those steps would no longer build in Lushay.
-  Found by a regression that compiles each step from its `.lushay.json`, and
-  fixed. See [Gotchas](../gotchas.md#lushay-a-new-submodule-must-be-added-to-every-project-that-uses-it).
-
-- A terminal test failed with a late `c` and a lost `L`: the testbench typed
-  at full line speed while the board was still sending its greeting - the
-  pasting limitation above. The testbench now waits for the greeting and
-  leaves 1 ms between keys, like a fast typist.
-- "Unable to bind wire/reg `io_ready`": the new UART code used `io_ready`
-  above its declaration - the [declare-before-use](../gotchas.md#verilog-declare-before-use) rule again.

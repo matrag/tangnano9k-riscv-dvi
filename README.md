@@ -29,6 +29,15 @@ HDMI connector, which every HDMI monitor accepts. It does not implement HDMI
 features such as audio or InfoFrames, and it is not an HDMI-certified product.
 "HDMI" here only names the connector on the board.
 
+## On the board
+
+| | |
+|---|---|
+| ![Step 2: color bars, gray ramp and a moving square](02_hdmi/snapshot.jpeg) | ![Step 3: the 80 x 30 text mode with the full character set and the 16 colors](03_text/snapshot.jpeg) |
+| **Step 2** - test pattern generated entirely in logic, 640 x 480 at 60 Hz | **Step 3** - 80 x 30 text mode: character set, 16-color palette, a frame counter written by hardware |
+| ![Step 6: the CPU prints one uptime line per second](06_cpu_text/snapshot.jpeg) | ![Step 7: text typed in a serial terminal on the PC appears on the screen](07_uart/snapshot.jpeg) |
+| **Step 6** - the CPU runs a C program and prints on the screen | **Step 7** - text typed in a serial terminal on the PC appears on the screen |
+
 ## The steps
 
 | Step | Folder | New idea |
@@ -76,8 +85,7 @@ not part of the repository.
 
 ## Status and limitations
 
-- Steps 0-2 and 5-8 have been tried on the board and work; step 3's hardware
-  works on the board as part of step 6; step 4 is simulation only. All
+- All steps work on the board, except step 4, which is simulation only. All
   testbenches pass. Numbers are in [notes/results.md](notes/results.md).
 - The CPU passes its own instruction tests and runs compiled C, but has not
   been checked against the official RISC-V compliance suite (`riscv-arch-test`).

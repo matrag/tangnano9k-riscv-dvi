@@ -45,9 +45,3 @@ See [Video](../video.md) for the full explanation.
 - Encoder testbench: **pass**, maximum running imbalance 8.
 - Place-and-route: pixel-clock logic up to **42.6 MHz** (needs 25.2). Each pair is
   placed as a real differential output (`DIFF_TYPE=ELVDS_OBUF`).
-
-## Problems we hit
-
-- Lushay: "Ports are missing from CST file: tmds_clk_n, ...". Then nextpnr:
-  "Unconstrained IO: tmds_d_n_OBUF_O_2". Fix: list the `_n` pins in the `.cst`
-  too. See [Gotchas](../gotchas.md#hdmi-pins-list-the-_n-pins-in-the-cst).

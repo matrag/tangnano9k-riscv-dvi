@@ -32,12 +32,3 @@ Holding **S1** resets it to 0.
 | [`top.v`](../../00_blinky/top.v) | the counter |
 | [`tangnano9k.cst`](../../00_blinky/tangnano9k.cst) | pins: clock 52, S1 4, LEDs 10/11/13/14/15/16 |
 | [`blinky.lushay.json`](../../00_blinky/blinky.lushay.json) | Lushay Code project file |
-
-## Problems we hit
-
-- Lushay looked for OSS CAD Suite in `C:\oss-cad-suite`: a **workspace**
-  setting was overriding the user setting. See [Toolchain](../toolchain.md).
-- The project file used the wrong key for the file list (`includedFilePaths`
-  instead of `includedFiles`) and the build said "No files to synthesize".
-  See [Gotchas](../gotchas.md#lushay-the-project-file-key-is-includedfiles).
-- S1 and S2 were swapped at first: **S1 is pin 4, S2 is pin 3**.

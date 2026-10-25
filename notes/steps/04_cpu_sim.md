@@ -62,12 +62,3 @@ since RV32I has no such instructions.
 - 04_hello.c: **pass**, CPI 4.07.
 - The core alone: about 2,000 LUT4-equivalent cells; its register file maps
   to 32 small LUT RAMs, no block RAM.
-
-## Problems we hit
-
-- **A real CPU bug**: test 13 (`sra`, arithmetic shift right) failed - zeros were
-  shifted in instead of copies of the sign bit. A Verilog signedness rule.
-  See [Gotchas](../gotchas.md#verilog-the--signedness-trap).
-- **A wrong test**: test 27 (`ori`) expected 0x12345FFF, but
-  0x12345678 | 0x7FF = 0x123457FF. The CPU was right.
-- `mem_addr_lo` was used before being declared: Verilog requires declaration first.

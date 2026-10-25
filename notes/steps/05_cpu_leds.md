@@ -59,9 +59,3 @@ PASS: LED program behaves as expected
 The extra 0.02 ms per step is the time the loop's own instructions take on top of the delay.
 
 Place-and-route: up to **60 MHz** (needs 27), 32% of the LUTs, 4 block RAMs.
-
-## Problems we hit
-
-- Yosys stopped: "Can not open file `program.hex`". It elaborated `soc` once
-  with its default parameter value. Defaults are now empty strings.
-  See [Gotchas](../gotchas.md#yosys-default-parameter-values-get-elaborated-too).

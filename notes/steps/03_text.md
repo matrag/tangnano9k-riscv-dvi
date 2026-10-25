@@ -2,7 +2,7 @@
 
 [Notes index](../README.md) · Previous: [Step 2](02_hdmi.md) · Next: [Step 4 - CPU in simulation](04_cpu_sim.md)
 
-**Folder:** [`03_text`](../../03_text) · **Status:** built and simulated; the same hardware works on the board inside [step 6](06_cpu_text.md)
+**Folder:** [`03_text`](../../03_text) · **Status:** works on the board
 
 ## Goal
 
@@ -59,10 +59,3 @@ column taken one stage too early): the testbench reported 37,618 wrong pixels.
 - 6 of 26 block RAMs: 4 for the character RAM (yosys builds it as 4 blocks of
   4096 x 4 bits), 2 for the font. All six carry their initial data.
 - Pixel-clock logic up to **105 MHz** (needs 25.2).
-
-## Problems we hit
-
-- `cell` is a reserved word in Verilog-2001: renamed to `cell_data`.
-  See [Gotchas](../gotchas.md#verilog-cell-is-a-reserved-word).
-- Python's `cp437` codec has no symbols for codes 0x01-0x1F (it treats them
-  as control characters): the scripts carry their own table for those.

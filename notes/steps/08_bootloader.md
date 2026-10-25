@@ -193,14 +193,3 @@ are used from their steps, not copied.
   opened and clicked through against the same fake board: good upload, CRC
   error, and Cancel while no bootloader answers.
 - All earlier testbenches still pass.
-
-## Problems we hit
-
-- The first testbench run failed in part C: the testbench sent the second upload
-  as soon as it saw "CRC mismatch", while the board was still printing the rest of
-  that line. The bytes arriving meanwhile overflowed the receive FIFO, and the
-  bootloader correctly reported a timeout. Fixed in the testbench, which now -
-  like `upload.py` - waits for the end of the board's line. The rule is now in
-  the protocol description (here and in `08_boot.c`).
-- Two C pitfalls were avoided up front: jumping to and writing at address 0
-  (C's "null pointer") - see [Gotchas](../gotchas.md#c-address-0-is-the-null-pointer).
