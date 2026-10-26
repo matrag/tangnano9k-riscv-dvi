@@ -25,9 +25,15 @@ yet - please report what you find.
 
 | Tool | Why | Where |
 |---|---|---|
-| **Python 3.8 or newer** | runs the setup script, the converters and the upload tool | Windows: [python.org](https://www.python.org/downloads/) - tick *Add python.exe to PATH* in the installer. Linux: usually installed (`python3`). |
+| **Python 3.8 or newer** | runs the setup script, the converters and the upload tool | Windows: [python.org](https://www.python.org/downloads/) - tick *Add python.exe to PATH* in the installer. Linux: usually installed (`python3`); on Debian/Ubuntu also install `python3-venv` and `python3-tk` (see below). |
 | **make** | builds the CPU software (`sw/Makefile`) | Windows: e.g. `winget install ezwinports.make`, or `choco install make` (Chocolatey), or MSYS2. Linux: `sudo apt install make` (or your distribution's equivalent). |
 | **VS Code** + the **Lushay Code** extension | builds the FPGA designs, flashes the board, runs testbenches | [code.visualstudio.com](https://code.visualstudio.com/), then in VS Code: Extensions, search *Lushay Code*. Optional if you build from the command line (section 7). |
+
+On Debian or Ubuntu, one command installs everything of this table except VS Code:
+
+```
+sudo apt install python3 python3-venv python3-tk make
+```
 
 Open a **new** terminal after installing, so it finds the new programs.
 
@@ -50,11 +56,19 @@ python framework_initialise.py
 
 | Step | What | Where it goes |
 |---|---|---|
-| 1 | checks Python, **pyserial** (offers to install it with pip) and make | - |
-| 2 | downloads **xPack GNU RISC-V Embedded GCC 15.2.0-1** (Windows ~450 MB, Linux ~410 MB), checks its SHA-256 against the value xPack publishes, unpacks it, runs it | `toolchain/riscv-gcc/` |
-| 3 | downloads **OSS CAD Suite 2024-12-08** (Windows ~290 MB, Linux ~610 MB) - yosys, nextpnr, Project Apicula, iverilog, openFPGALoader - checks the download is complete, unpacks it, runs each tool once | `toolchain/oss-cad-suite/` |
-| 4 | writes the tool paths for `make` | `local_paths.mk` |
-| 5 | rebuilds the CPU programs and checks they are byte-identical to the `.hex` files in the repository | - |
+| 1 | checks Python and make | - |
+| 2 | creates the project's **virtual environment** and installs **pyserial 3.5** into it (for the upload tools); checks **tkinter** (for the upload window) | `.venv/` |
+| 3 | downloads **xPack GNU RISC-V Embedded GCC 15.2.0-1** (Windows ~450 MB, Linux ~410 MB), checks its SHA-256 against the value xPack publishes, unpacks it, runs it | `toolchain/riscv-gcc/` |
+| 4 | downloads **OSS CAD Suite 2024-12-08** (Windows ~290 MB, Linux ~610 MB) - yosys, nextpnr, Project Apicula, iverilog, openFPGALoader - checks the download is complete, unpacks it, runs each tool once | `toolchain/oss-cad-suite/` |
+| 5 | writes the tool paths and the venv's Python for `make` | `local_paths.mk` |
+| 6 | rebuilds the CPU programs and checks they are byte-identical to the `.hex` files in the repository | - |
+| 7 | Linux only: checks that you may open the board's serial port and USB device, and prints the commands to fix it if not (section 5) | - |
+
+**Why a virtual environment:** current Linux distributions don't allow `pip
+install` into the system's Python (the error says *externally-managed-environment*),
+so the project keeps its one Python package, pyserial, in its own `.venv/`
+folder - on Windows too, so both work the same way. You never need to
+activate it: `make` calls the venv's Python directly.
 
 These are the exact versions the project was developed and measured with.
 The downloads come from the official GitHub release pages:
@@ -67,7 +81,7 @@ compare it with someone else's. For reference, the Windows package
 testing this guide had SHA-256
 `8f52a429dceb560270b7ab6f02f688ac556c9e511030389c93234dbcae028186`.
 
-`toolchain/` and `local_paths.mk` belong to your PC and are not part of the
+`toolchain/`, `.venv/` and `local_paths.mk` belong to your PC and are not part of the
 repository (`.gitignore`). Running the script again skips what is already
 installed.
 
@@ -77,14 +91,15 @@ installed.
 python framework_initialise.py --gcc-bin <folder with riscv-none-elf-gcc> --oss-cad <OSS CAD Suite folder>
 ```
 
-Other versions may produce slightly different results; step 5 tells you if
+Other versions may produce slightly different results; step 6 tells you if
 the compiled programs differ from the repository's.
 
 ## 4. Map the tool paths
 
 Two programs need to know where the tools are.
 
-**make** (the CPU software) reads `local_paths.mk` in the repository folder.
+**make** (the CPU software) reads `local_paths.mk` in the repository folder:
+the compiler's folder and the Python to use (the venv's).
 The script writes it; to write it by hand, copy `local_paths.example.mk` to
 `local_paths.mk` and fill in your paths (forward slashes also on Windows).
 
@@ -106,9 +121,17 @@ UART of steps 7 and 8).
 
 - **Windows:** the serial port appears in Device Manager under *Ports (COM & LPT)*
   as *USB Serial Port (COMn)*.
-- **Linux:** it appears as `/dev/ttyUSBn`. Your user needs access to it
-  (usually by being in the `dialout` group), and openFPGALoader needs access to
-  the USB device (its documentation describes the udev rule).
+- **Linux:** it appears as `/dev/ttyUSBn`. Two permissions are needed; step 7
+  of the setup script checks both and prints these commands if one is missing:
+  - the **serial port**: your user must be in the `dialout` group (Arch Linux:
+    `uucp`): `sudo usermod -aG dialout $USER`, then log out and back in;
+  - the **USB device**, for openFPGALoader to program the FPGA: a udev rule for
+    the board's USB ID `0403:6010`:
+    ```
+    echo 'ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6010", MODE="664", GROUP="plugdev", TAG+="uaccess"' | sudo tee /etc/udev/rules.d/99-tangnano9k.rules
+    sudo udevadm control --reload-rules && sudo udevadm trigger
+    ```
+    then unplug the board and plug it in again.
 
 To list the connected boards: in `sw/`, run `make ports`.
 
@@ -154,6 +177,11 @@ also in the step folder. Every testbench prints `PASS` or `FAIL`.
 | Lushay: *No files to synthesize* | a `*.lushay.json` without `includedFiles` - every project here lists its files |
 | OSS CAD tools exit at once on Windows (code -1073741515) | their `lib` folder is not on the PATH (only `bin`) |
 | `make: riscv-none-elf-gcc: No such file or directory` | `local_paths.mk` missing or wrong - run the setup script again |
+| Setup script: *could not create the virtual environment* (Linux) | `sudo apt install python3-venv`, then run the script again |
+| `make gui`: *No module named 'tkinter'* | `sudo apt install python3-tk` (Fedora: `python3-tkinter`); `make upload` works without it |
+| *pyserial is missing* / *No module named 'serial'* | the tool runs with a Python without pyserial - run it through `make`, or with the venv's Python (`.venv/bin/python`, Windows `.venv\Scripts\python`); run the setup script again if `.venv/` is gone |
+| Linux: upload tool *Permission denied: '/dev/ttyUSB1'* | not in the `dialout` group, or not logged out and in since (section 5) |
+| Linux: openFPGALoader *unable to open ftdi device* / *LIBUSB_ERROR_ACCESS* | the udev rule is missing, or the board was not replugged after adding it (section 5) |
 | Upload tool: *cannot open COMn* | another program (a serial terminal) has the port open |
 | Upload tool: *no answer from the bootloader* | the step 8 bitstream is not on the board, or S1 was not pressed |
 

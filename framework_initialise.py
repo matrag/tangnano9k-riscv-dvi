@@ -7,29 +7,33 @@ Run it once from the repository folder:
     python framework_initialise.py --yes      # no questions
 
 What it does (details in SETUP.md):
-  1. checks Python, pyserial (offers to install it) and make
-  2. downloads the RISC-V compiler, xPack GNU RISC-V Embedded GCC 15.2.0-1,
+  1. checks Python and make
+  2. creates the project's Python environment .venv/ and installs pyserial
+     into it; checks tkinter (for the upload window)
+  3. downloads the RISC-V compiler, xPack GNU RISC-V Embedded GCC 15.2.0-1,
      checks its SHA-256 against the one xPack publishes, and unpacks it into
      toolchain/riscv-gcc/
-  3. downloads OSS CAD Suite 2024-12-08 (yosys, nextpnr, iverilog,
+  4. downloads OSS CAD Suite 2024-12-08 (yosys, nextpnr, iverilog,
      openFPGALoader ...), checks its size, and unpacks it into
      toolchain/oss-cad-suite/
-     (steps 2 and 3 also run the tools once to check they work)
-  4. writes local_paths.mk (tool paths for sw/Makefile)
-  5. rebuilds the CPU programs and checks they come out byte-identical to the
+     (steps 3 and 4 also run the tools once to check they work)
+  5. writes local_paths.mk (tool paths for sw/Makefile)
+  6. rebuilds the CPU programs and checks they come out byte-identical to the
      .hex files in the repository
+  7. Linux only: checks this user may open the board's serial port and USB
+     device, and prints the commands to fix it if not (it never runs sudo)
 
 These are the exact versions the project was developed and measured with.
-toolchain/ and local_paths.mk are not part of the repository (see .gitignore):
-they are about 3 GB once unpacked and depend on this PC. Running the script
-again skips what is already installed.
+toolchain/, .venv/ and local_paths.mk are not part of the repository (see
+.gitignore): they are about 3 GB once unpacked and depend on this PC. Running
+the script again skips what is already installed.
 
 Options:
   --yes            don't ask, answer yes to everything
   --gcc-bin DIR    use an already installed GCC (the folder with riscv-none-elf-gcc)
   --oss-cad DIR    use an already installed OSS CAD Suite (the folder that contains bin/)
   --keep-downloads keep the downloaded archives in toolchain/downloads/
-  --no-build-check skip step 5
+  --no-build-check skip step 6
 """
 
 import argparse
@@ -47,6 +51,8 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parent
 TOOLCHAIN = REPO / "toolchain"
 DOWNLOADS = TOOLCHAIN / "downloads"
+VENV = REPO / ".venv"
+PYSERIAL = "3.5"
 
 GCC_VERSION = "15.2.0-1"
 GCC_BASE = f"https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/download/v{GCC_VERSION}/"
@@ -149,7 +155,7 @@ def to_make_path(p):
 # ---- the steps --------------------------------------------------------------------------
 
 def check_basics():
-    step("1. Python, pyserial, make")
+    step("1. Python and make")
     if sys.version_info < (3, 8):
         fail(f"Python 3.8 or newer is needed, this is {platform.python_version()}")
     print(f"  Python {platform.python_version()}: {sys.executable}")
@@ -164,19 +170,6 @@ def check_basics():
     if machine not in ("amd64", "x86_64"):
         fail(f"only x86-64 PCs are supported, this is {machine}")
 
-    try:
-        import serial                                # noqa: F401
-        print("  pyserial: installed")
-    except ImportError:
-        print("  pyserial: missing (needed by the upload tools)")
-        if ask("  Install it now with pip (for this user)?"):
-            code, out = run([sys.executable, "-m", "pip", "install", "--user", "pyserial"])
-            print("  " + (out.splitlines()[-1] if out else ""))
-            if code != 0:
-                fail("pip could not install pyserial - see the message above")
-        else:
-            print("  skipped: install it later with  python -m pip install pyserial")
-
     make = shutil.which("make")
     if make:
         print(f"  make: {make}")
@@ -190,8 +183,65 @@ def check_basics():
     return system, make
 
 
+def venv_python():
+    return VENV / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
+
+
+def setup_venv(system):
+    """The project's own Python environment in .venv/, with pyserial.
+
+    Packages go into .venv/ instead of the system's Python: current Linux
+    distributions refuse `pip install` outside a virtual environment (PEP 668),
+    and the Makefile runs Python with -I, which ignores packages installed with
+    `pip --user`. A venv works the same on Windows and Linux, and nobody has to
+    activate it: local_paths.mk points the Makefile straight at its python.
+    Returns the Python the Makefile should use.
+    """
+    step("2. Python environment (.venv: pyserial, tkinter)")
+    vpy = venv_python()
+    # a venv breaks if the Python it was made from is removed or upgraded: make it again
+    if vpy.exists() and run([str(vpy), "-I", "-m", "pip", "--version"])[0] == 0:
+        print(f"  already there: {VENV}")
+    else:
+        if not ask(f"  Create the virtual environment {VENV.name}/ and install pyserial {PYSERIAL} into it (from PyPI)?"):
+            print("  skipped: the Makefile will use this Python; the upload tools need pyserial in it")
+            return Path(sys.executable)
+        if VENV.exists():
+            shutil.rmtree(VENV)
+        code, out = run([sys.executable, "-m", "venv", str(VENV)])
+        if code != 0:
+            shutil.rmtree(VENV, ignore_errors=True)
+            print(out)
+            if system == "linux":
+                fail("could not create the virtual environment. On Debian/Ubuntu the venv module\n"
+                     "       is a separate package:  sudo apt install python3-venv  - then run this script again")
+            fail("could not create the virtual environment - see the message above")
+        print(f"  created: {VENV}")
+
+    if run([str(vpy), "-I", "-c", "import serial"])[0] == 0:
+        print("  pyserial: installed")
+    else:
+        code, out = run([str(vpy), "-I", "-m", "pip", "install", "--disable-pip-version-check",
+                         f"pyserial=={PYSERIAL}"])
+        if code != 0:
+            print(out)
+            fail("pip could not install pyserial into .venv - see the message above")
+        print(f"  pyserial {PYSERIAL}: installed")
+
+    # tkinter (for the upload window) is not a pip package: the venv uses the system's
+    if run([str(vpy), "-I", "-c", "import tkinter; tkinter.Tcl()"])[0] == 0:
+        print("  tkinter: available (upload window)")
+    else:
+        print("  tkinter: MISSING - only the upload window needs it; `make upload` works without it.")
+        if system == "linux":
+            print("        Install it, e.g.  sudo apt install python3-tk   (Fedora: python3-tkinter)")
+        else:
+            print("        Reinstall Python from python.org with the 'tcl/tk and IDLE' option ticked.")
+    return vpy
+
+
 def install_gcc(system, given):
-    step(f"2. RISC-V compiler (xPack GCC {GCC_VERSION})")
+    step(f"3. RISC-V compiler (xPack GCC {GCC_VERSION})")
     if given:
         gcc_bin = Path(given).resolve()
     else:
@@ -238,7 +288,7 @@ def oss_cad_env(oss):
 
 
 def install_oss_cad(system, given):
-    step(f"3. OSS CAD Suite {OSS_CAD_TAG}")
+    step(f"4. OSS CAD Suite {OSS_CAD_TAG}")
     if given:
         oss = Path(given).resolve()
     else:
@@ -287,21 +337,21 @@ def install_oss_cad(system, given):
     return oss
 
 
-def write_local_paths(gcc_bin, oss):
-    step("4. local_paths.mk")
+def write_local_paths(gcc_bin, oss, python):
+    step("5. local_paths.mk")
     path = REPO / "local_paths.mk"
     path.write_text(
         "# Tool paths of this PC, written by framework_initialise.py.\n"
         "# Not part of the repository (see .gitignore); format: local_paths.example.mk\n"
         f"GCC_BIN := {to_make_path(gcc_bin)}\n"
         f"OSS_CAD := {to_make_path(oss)}\n"
-        f"PYTHON := {to_make_path(sys.executable)}\n",
+        f"PYTHON := {to_make_path(python)}\n",
         encoding="utf-8")
     print(f"  written: {path}")
 
 
 def check_build(make):
-    step("5. Build check: rebuild the CPU programs")
+    step("6. Build check: rebuild the CPU programs")
     if not make:
         print("  skipped: make is not installed (see step 1)")
         return
@@ -322,6 +372,54 @@ def check_build(make):
         print(f"  {len(hexes)} program images rebuilt, all byte-identical to the repository")
 
 
+UDEV_RULE = ('ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6010", '
+             'MODE="664", GROUP="plugdev", TAG+="uaccess"')
+
+
+def check_linux_access():
+    """Linux only: may this user open the board's serial port and its USB device?
+
+    Only checks and prints advice - changing groups or udev rules needs root,
+    and this script never runs sudo.
+    """
+    step("7. Access to the board (Linux)")
+    import grp
+    # the serial port /dev/ttyUSBn belongs to the group dialout (Arch Linux: uucp)
+    groups = set(os.getgroups())
+    serial_groups = []
+    for name in ("dialout", "uucp"):
+        try:
+            serial_groups.append((name, grp.getgrnam(name).gr_gid))
+        except KeyError:
+            pass
+    if not serial_groups or any(gid in groups for _, gid in serial_groups):
+        print("  serial port: OK (this user is in the group that owns /dev/ttyUSBn)")
+    else:
+        name = serial_groups[0][0]
+        print(f"  serial port: this user is not in the group '{name}', so the upload tools")
+        print(f"        can't open /dev/ttyUSBn. Fix:  sudo usermod -aG {name} $USER")
+        print("        then log out and back in.")
+
+    # openFPGALoader talks to the FTDI chip (USB ID 0403:6010) directly: it needs a udev rule
+    found = []
+    for folder in ("/etc/udev/rules.d", "/usr/lib/udev/rules.d", "/lib/udev/rules.d"):
+        for f in sorted(Path(folder).glob("*.rules")) if Path(folder).is_dir() else []:
+            try:
+                text = f.read_text(errors="replace").lower()
+            except OSError:
+                continue
+            if '"0403"' in text and '"6010"' in text:
+                found.append(str(f))
+    if found:
+        print(f"  USB (openFPGALoader): udev rule found in {found[0]}")
+    else:
+        print("  USB (openFPGALoader): no udev rule for the board (0403:6010) - without one,")
+        print("        programming the FPGA needs root. Add it with:")
+        print(f"        echo '{UDEV_RULE}' | sudo tee /etc/udev/rules.d/99-tangnano9k.rules")
+        print("        sudo udevadm control --reload-rules && sudo udevadm trigger")
+        print("        then unplug and plug in the board.")
+
+
 def main():
     global ASSUME_YES
     ap = argparse.ArgumentParser(description="Set up the tools for tangnano9k-riscv-dvi.")
@@ -339,11 +437,14 @@ def main():
         print(f"Note: only {free >> 30} GB free here; downloads and unpacked tools need about 4 GB.")
 
     system, make = check_basics()
+    python = setup_venv(system)
     gcc_bin = install_gcc(system, args.gcc_bin)
     oss = install_oss_cad(system, args.oss_cad)
-    write_local_paths(gcc_bin, oss)
+    write_local_paths(gcc_bin, oss, python)
     if not args.no_build_check:
         check_build(make)
+    if system == "linux":
+        check_linux_access()
 
     if DOWNLOADS.exists() and not args.keep_downloads:
         shutil.rmtree(DOWNLOADS)

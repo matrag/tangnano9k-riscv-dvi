@@ -1,5 +1,6 @@
 # ---- Your PC's tools and paths (framework_initialise.py) -------------------------
 toolchain/
+.venv/
 local_paths.mk
 
 # ---- Software build outputs (sw/Makefile) ----------------------------------------

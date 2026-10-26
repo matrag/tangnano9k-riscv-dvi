@@ -60,7 +60,8 @@ cable, and a PC with Windows 10/11 or Linux (x86-64).
 1. Install Python, `make` and VS Code with the Lushay Code extension.
 2. Run `python framework_initialise.py` in this folder: it downloads the exact
    tool versions the project was made with (RISC-V GCC, OSS CAD Suite) into
-   `toolchain/` and checks that everything works.
+   `toolchain/`, sets up a Python virtual environment in `.venv/` and checks
+   that everything works (on Linux: `python3`).
 3. Tell Lushay Code where OSS CAD Suite is, open this folder in VS Code and
    build `00_blinky`.
 
@@ -79,7 +80,7 @@ framework_initialise.py         sets up the tools (see SETUP.md)
 ```
 
 The `.hex` files (compiled programs, font, screen) are included, so the FPGA
-designs can be built without the RISC-V compiler. `toolchain/` and
+designs can be built without the RISC-V compiler. `toolchain/`, `.venv/` and
 `local_paths.mk` are created on your PC by `framework_initialise.py` and are
 not part of the repository.
 

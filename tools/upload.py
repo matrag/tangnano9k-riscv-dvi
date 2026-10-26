@@ -23,7 +23,8 @@ How an upload works (the protocol is described in sw/08_boot.c):
 This file is also the engine of the GUI (upload_gui.py): find_boards(),
 read_program() and upload() are used by both.
 
-Needs pyserial (`pip install pyserial`).
+Needs pyserial: framework_initialise.py installs it into the project's .venv/,
+and `make upload` / `make gui` run this file with that Python.
 """
 
 import argparse
@@ -36,7 +37,9 @@ try:
     import serial
     import serial.tools.list_ports
 except ImportError:
-    sys.exit("pyserial is missing: pip install pyserial")
+    sys.exit("pyserial is missing in this Python. Run the tool through make (sw/), or with\n"
+             "the project's venv: .venv/bin/python (Windows: .venv\\Scripts\\python);\n"
+             "framework_initialise.py creates it.")
 
 BOARD_USB_ID = (0x0403, 0x6010)   # the Tang Nano's USB chip (BL702) presents itself as an FTDI FT2232
 MAX_PROGRAM = 0x1F00              # 7936 bytes: RAM above is the bootloader's stack (sw/08_boot.ld)

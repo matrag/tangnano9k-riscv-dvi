@@ -10,12 +10,17 @@
 | **OSS CAD Suite** 2024-12-08 | yosys (synthesis), nextpnr-himbaechel (place and route), gowin_pack, openFPGALoader (flashing), iverilog (simulation) | `toolchain/oss-cad-suite/` |
 | **xPack GNU RISC-V Embedded GCC** 15.2.0-1 | compiling C/assembly for the CPU | `toolchain/riscv-gcc/xpack-riscv-none-elf-gcc-15.2.0-1/bin/` |
 | GNU **make** | building the software | on the PATH |
-| **Python** 3 | data-file generators in [`tools/`](../tools) | on the PATH |
+| **Python** 3 | data-file generators and upload tools in [`tools/`](../tools) | on the PATH; packages (pyserial) in the project's `.venv/` |
 
-`framework_initialise.py` downloads both into `toolchain/` and writes their
-paths into `local_paths.mk` (for `make`); see [SETUP.md](../SETUP.md). In
-Lushay's settings, `lushay.OssCadSuite.path` must point at the OSS CAD Suite
-folder (check the User **and** Workspace tabs).
+`framework_initialise.py` downloads both into `toolchain/`, creates the
+virtual environment `.venv/` with pyserial, and writes the paths of the tools
+and of the venv's Python into `local_paths.mk` (for `make`); see
+[SETUP.md](../SETUP.md). `make` uses that Python directly, so the venv never
+needs activating. Typing `python` yourself for a tool that needs pyserial
+(`upload.py`, `test_upload.py`, miniterm): use the venv's, `.venv/Scripts/python`
+on Windows, `.venv/bin/python` on Linux. In Lushay's settings,
+`lushay.OssCadSuite.path` must point at the OSS CAD Suite folder (check the
+User **and** Workspace tabs).
 
 ## The build flow
 

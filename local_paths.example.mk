@@ -14,5 +14,7 @@ GCC_BIN := C:/path/to/tangnano9k-riscv-dvi/toolchain/riscv-gcc/xpack-riscv-none-
 # lushay.OssCadSuite.path (see SETUP.md).
 OSS_CAD := C:/path/to/tangnano9k-riscv-dvi/toolchain/oss-cad-suite
 
-# The Python that has pyserial (used for bin2hex and the upload tools)
-PYTHON := python
+# The Python that has pyserial (used for bin2hex and the upload tools):
+# the project's virtual environment, made by framework_initialise.py.
+# Linux: <repository>/.venv/bin/python
+PYTHON := C:/path/to/tangnano9k-riscv-dvi/.venv/Scripts/python.exe
