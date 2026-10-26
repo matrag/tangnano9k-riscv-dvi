@@ -92,8 +92,9 @@ not part of the repository.
   been checked against the official RISC-V compliance suite (`riscv-arch-test`).
 - No interrupts, no CSRs, no multiply/divide instructions (GCC uses software
   routines) - see [notes/cpu.md](notes/cpu.md).
-- The setup script and guide are tested on Windows; Linux is supported but
-  not yet tested.
+- The setup script and guide are tested on Windows. On Linux the setup script
+  is tested on Debian 12; building, flashing and uploading from Linux are not
+  tested yet.
 - Known limitations of each step are listed on its page in `notes/steps/`.
 
 ## Credits and license

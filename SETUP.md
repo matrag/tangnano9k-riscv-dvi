@@ -8,8 +8,9 @@ minutes plus the download time for about 730 MB (Windows) or 1 GB (Linux);
 on the development PC the whole run took 4.5 minutes.
 
 **Supported:** Windows 10/11 and Linux, on x86-64 PCs. The script and this
-guide are tested on Windows; Linux works the same way but has not been tested
-yet - please report what you find.
+guide are tested on Windows; on Linux the setup script is tested on Debian 12,
+but building, flashing and uploading from Linux have not been tried yet -
+please report what you find.
 
 ## 1. What you need
 
